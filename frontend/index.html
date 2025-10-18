@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Interview</title>
+  <style>
+    /* Reset & fonts */
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f8;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    h2#question {
+      background-color: #fff;
+      padding: 15px 20px;
+      border-radius: 10px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      text-align: center;
+      max-width: 600px;
+      width: 100%;
+    }
+
+    .video-container {
+      position: relative;
+      width: 360px;
+      height: 270px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      margin-bottom: 20px;
+    }
+
+    video#preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 12px 25px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    button#startBtn {
+      background-color: #4CAF50;
+      color: #fff;
+    }
+
+    button#startBtn:hover {
+      background-color: #45a049;
+    }
+
+    button#stopBtn {
+      background-color: #f44336;
+      color: #fff;
+    }
+
+    button#stopBtn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    button#stopBtn:hover:not(:disabled) {
+      background-color: #e53935;
+    }
+
+    #status {
+      font-size: 16px;
+      text-align: center;
+      max-width: 600px;
+      width: 100%;
+      padding: 10px 20px;
+      border-radius: 10px;
+      background-color: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h2 id="question">Loading question...</h2>
+
+  <div class="video-container">
+    <video id="preview" autoplay muted playsinline></video>
+  </div>
+
+  <div class="controls">
+    <button id="startBtn">Start Interview</button>
+    <button id="stopBtn" disabled>Stop & Upload</button>
+  </div>
+
+  <p id="status"></p>
+
+  <script src="interview.js"></script>
+</body>
+</html>
