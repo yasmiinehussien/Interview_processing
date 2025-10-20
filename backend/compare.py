@@ -2,14 +2,14 @@ import os
 import sys
 import json
 import subprocess
-import whisper
+from transformers import pipeline
+import torch
 from sentence_transformers import SentenceTransformer, util
 import google.generativeai as genai  # <-- Keep this
 from dotenv import load_dotenv
 
 # ---- LOAD ENV VARIABLES ----
 load_dotenv()
-# We only need to configure Google Gemini now
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 # ---- CHECK COMMAND-LINE ARGUMENTS ----
@@ -24,7 +24,6 @@ ideal_answer = sys.argv[2]  # Ideal answer for similarity comparison
 os.environ["IMAGEIO_FFMPEG_EXE"] = r"C:\Users\yasmi\Downloads\ffmpeg-8.0\ffmpeg-8.0-essentials_build\bin\ffmpeg.exe"
 
 # ---- HELPER FUNCTION ----
-# This is the correct function to use the free API
 def polish_transcript_with_gemini(raw_text, question_text):
     prompt = f"""
 You are helping to clean and understand an interview answer.
@@ -41,18 +40,23 @@ Your task:
 
 Provide only the polished answer.
 """
-    # NEW
-    # NEW - Use the name directly from your list
     model = genai.GenerativeModel('models/gemini-pro-latest')
     response = model.generate_content(prompt)
     return response.text.strip()
 
 # ---- MAIN PROCESS ----
 try:
-    # Step 1: Load Whisper model
-    print("Loading Whisper model...")
-    whisper_model = whisper.load_model("medium")
-    print("Whisper model loaded.")
+    # Step 1: Prepare the Hugging Face Whisper pipeline (open-source)
+    print("Loading open-source Whisper model from Hugging Face (this may download once)...")
+    # choose device: 0 for GPU, -1 for CPU
+    device = 0 if torch.cuda.is_available() else -1
+
+    whisper_pipeline = pipeline(
+        "automatic-speech-recognition",
+        model="distil-whisper/medium.en",   # open-source, HF-hosted
+        device=device
+    )
+    print("Whisper model (Hugging Face) loaded.")
 
     # Step 2: Convert video to mono 16kHz WAV
     audio_file = "temp_audio.wav"
@@ -67,15 +71,19 @@ try:
     ], check=True)
     print("Audio extracted.")
 
-    # Step 3: Transcribe audio
+    # Step 3: Transcribe audio using HF pipeline
     print("Transcribing audio...")
-    result = whisper_model.transcribe(audio_file, language="en", fp16=False)
-    raw_transcript = result["text"]
+    # The pipeline accepts a path to the file
+    result = whisper_pipeline(audio_file)
+    # result may be a dict like {"text": "..."}
+    raw_transcript = result.get("text") if isinstance(result, dict) else str(result)
     print("Transcription complete.")
+    # Optionally delete temp audio when done:
+    # os.remove(audio_file)
 
-    # Step 4: Polish transcript using Gemini API (THE FIX IS HERE!)
+    # Step 4: Polish transcript using Gemini API
     print("Polishing transcript with Gemini API...")
-    polished_transcript = polish_transcript_with_gemini(raw_transcript, ideal_answer) # <-- CORRECTED LINE
+    polished_transcript = polish_transcript_with_gemini(raw_transcript, ideal_answer)
     print("Transcript polished.")
 
     # Step 5: Compute semantic similarity
